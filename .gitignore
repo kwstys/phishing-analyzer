@@ -1,0 +1,55 @@
+# ============================================================
+# PhishScope .gitignore
+# ============================================================
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ---------- 虚拟环境 ----------
+.venv/
+venv/
+env/
+
+# ---------- 测试与缓存 ----------
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# ---------- 编辑器 / 系统 ----------
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+Desktop.ini
+
+# ---------- 敏感信息（凭据管理：API key 只从环境变量读取）----------
+# API key 只能从环境变量读取，绝不写入代码或提交仓库
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# ---------- 未脱敏的真实邮件样本（入库前必须逐封脱敏）----------
+# 分析真实钓鱼邮件时放这里做本地测试；入库前必须逐封脱敏并移入 samples/
+.local-samples/
+
+# ---------- 本地工具与临时目录（不入库）----------
+.sandbox-tools/
+.tmp/
+.pt/
+pytest-of-*/
+tmp*/
+
+# 内部文档不随仓库公开，防止 git add -A 误提交
+/docs/PRD.md
