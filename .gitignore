@@ -44,12 +44,8 @@ Desktop.ini
 # 分析真实钓鱼邮件时放这里做本地测试；入库前必须逐封脱敏并移入 samples/
 .local-samples/
 
-# ---------- 本地工具与临时目录（不入库）----------
-.sandbox-tools/
+# ---------- 临时目录 ----------
 .tmp/
-.pt/
-pytest-of-*/
-tmp*/
 
 # 内部文档不随仓库公开，防止 git add -A 误提交
 /docs/PRD.md
