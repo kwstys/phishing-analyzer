@@ -1,0 +1,79 @@
+# 免费邮箱域名清单
+#
+# 检查什么：发件人用的是不是免费邮箱，而正文却以企业 / 机构口吻自居
+#           例：From 是 xxx@163.com，正文却自称“XX 银行客服中心”
+#
+# 被哪条检查使用：使用免费邮箱却声称企业身份   严重程度：低
+#
+# 判定口径：
+#   免费邮箱本身完全正常，大量真实客户、个人用户都在用。
+#   只有免费邮箱 + 正文以企业/机构口吻自居才构成可疑。
+#   单看发件域名绝对不能判恶意
+#
+# 为什么这个信号有效：
+#   正规企业不会用免费邮箱发业务邮件（没有 SPF/DKIM 配置、无法追责、
+#   域名不属于自己）。声称自己是银行/政府/大公司却用免费邮箱，逻辑上不成立。
+#
+# 维护：只写域名，一律小写
+
+# 国际主流免费邮箱
+global:
+  - gmail.com
+  - googlemail.com
+  - outlook.com
+  - hotmail.com
+  - live.com
+  - msn.com
+  - yahoo.com
+  - yahoo.co.jp
+  - ymail.com
+  - aol.com
+  - icloud.com
+  - me.com
+  - mac.com
+  - protonmail.com
+  - proton.me
+  - gmx.com
+  - gmx.net
+  - mail.com
+  - yandex.com
+  - yandex.ru
+  - zoho.com
+  - tutanota.com
+  - fastmail.com
+
+# 国内免费邮箱
+china:
+  - qq.com
+  - foxmail.com   # 腾讯
+  - 163.com       # 网易
+  - 126.com       # 网易
+  - yeah.net      # 网易
+  - sina.com
+  - sina.cn
+  - sohu.com
+  - 139.com       # 中国移动
+  - 189.cn        # 中国电信
+  - aliyun.com    # 阿里
+  - tom.com
+  - 21cn.com
+  - 263.net
+  - 88.com
+  - live.cn
+
+# 一次性 / 临时邮箱：比普通免费邮箱强得多的信号
+# 正规企业几乎不可能用这类邮箱联系客户
+disposable:
+  - mailinator.com
+  - guerrillamail.com
+  - 10minutemail.com
+  - temp-mail.org
+  - throwaway.email
+  - sharklasers.com
+  - yopmail.com
+  - maildrop.cc
+  - getnada.com
+  - trashmail.com
+  - dispostable.com
+  - tempmail.com
+  - fakeinbox.com

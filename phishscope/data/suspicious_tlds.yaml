@@ -1,0 +1,75 @@
+# 高可疑顶级域（TLD）清单
+#
+# 检查什么：邮件里的链接是否指向滥用率高的域名后缀
+#           例：http://paypa1-login.top/   .top 是滥用率最高的后缀之一
+#           也可用于评估发件域的可疑程度
+#
+# 被哪条检查使用：链接使用高可疑顶级域   严重程度：中
+#
+# 判定口径：
+#   这里列的是滥用率高的 TLD，不是恶意TLD。
+#   命中只是一条中危信号，不单独构成结论——正规营销邮件、海外小网站大量使用这些后缀。误报是这条规则最大的风险。
+#
+# 维护：只写 TLD 本身，不带前导点，一律小写
+
+# 曾长期提供免费注册，历史滥用率最高（Freenom 系）
+free_registration:
+  - tk
+  - ml
+  - ga
+  - cf
+  - gq
+
+# 通用顶级域中长期位居滥用榜前列的
+high_abuse:
+  - top
+  - xyz
+  - club
+  - work
+  - click
+  - link
+  - live
+  - online
+  - site
+  - website
+  - space
+  - store
+  - fun
+  - icu
+  - buzz
+  - rest
+  - cyou
+  - monster
+  - quest
+  - sbs
+  - cfd
+  - lol
+  - bond
+  - bar
+  - best
+
+# 与文件扩展名形近，用来骗过肉眼检查（Google 注册的 gTLD）
+looks_like_file_extension:
+  - zip
+  - mov
+
+# 常见于垃圾邮件的低价后缀
+cheap_bulk:
+  - country
+  - stream
+  - download
+  - racing
+  - loan
+  - science
+  - party
+  - review
+  - win
+  - bid
+  - trade
+  - webcam
+  - date
+  - men
+  - cricket
+  - accountant
+  - faith
+  - gdn

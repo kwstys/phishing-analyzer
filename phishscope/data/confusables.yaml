@@ -1,0 +1,87 @@
+# 同形异义字（confusable characters）
+#
+# 检查什么：发件人域名里有没有混用不同文字系统的字符
+#
+# 被哪条检查使用：域名同形异义字   严重程度：高
+#
+# 相关现象：同一件事的另外两个视角，检测方式不同：
+#   - 发件人域名以 xn-- 开头（Punycode 编码）
+#   - 链接域名以 xn-- 开头
+#   非 ASCII 域名在 DNS 与 URL 里会被编码成 Punycode（xn-- 开头），所以同一个仿冒域名通常同时命中上面几条。
+#
+#   本文件主要供域名同形异义字使用；对上面两条 Punycode 检查起辅助作用：
+#   解出 Punycode 之后，用本表判断它是真实的语言域名还是
+#   混用文字系统的仿冒，这才是区分误报的关键。
+#
+# 攻击原理：用其他文字系统的字符冒充拉丁字母。
+#   例：раypal.com   第一个字符 р 是西里尔字母 U+0440，
+#   在浏览器地址栏和常见字体下与拉丁字母 p 几乎无法区分，
+#   但它是一个完全不同的域名，证书、SPF、DMARC 全都对不上。
+#
+# 判定口径（决定了误报率）：
+#   1. 真正的信号是在同一个域名里混用文字系统，
+#      而不是含非 ASCII 字符——中文域名（.中国/.公司）、
+#      日文、阿拉伯文这些真实语言域名是合法的，不能误判
+#   2. 域名里出现非拉丁字符时，先判断它是否属于某一门语言的一致用法；
+#      混用（比如拉丁字母里夹一个西里尔字母）才是攻击特征
+#
+# 本文件只收不规则的形近字符。
+#   下面这些能按码位区间批量判断的，留在 Python 里用 range 处理，
+#   不写进本文件（否则要列几百行，且无法人工核对）：
+#     - 全角字母    ａ-ｚ  U+FF41–U+FF5A；Ａ-Ｚ U+FF21–U+FF3A
+#     - 数学字母    𝐚 𝐀 等  U+1D400–U+1D7FF
+#     - 带圈字母    ⓐ Ⓐ 等  U+24B6–U+24E9
+#
+# 维护：新增一对 = 加一行混淆字符: 它冒充的字符，注释写明码位便于核对
+
+# 西里尔字母 → 拉丁字母（域名仿冒最常用的手段）
+cyrillic_to_latin:
+  а: a    # U+0430 CYRILLIC SMALL LETTER A
+  е: e    # U+0435 CYRILLIC SMALL LETTER IE
+  о: o    # U+043E CYRILLIC SMALL LETTER O
+  р: p    # U+0440 CYRILLIC SMALL LETTER ER
+  с: c    # U+0441 CYRILLIC SMALL LETTER ES
+  х: x    # U+0445 CYRILLIC SMALL LETTER HA
+  у: y    # U+0443 CYRILLIC SMALL LETTER U
+  і: i    # U+0456 CYRILLIC SMALL LETTER BYELORUSSIAN-UKRAINIAN I
+  ј: j    # U+0458 CYRILLIC SMALL LETTER JE
+  ѕ: s    # U+0455 CYRILLIC SMALL LETTER DZE
+  ԁ: d    # U+0501 CYRILLIC SMALL LETTER KOMI DE
+  һ: h    # U+04BB CYRILLIC SMALL LETTER SHHA
+  ӏ: l    # U+04CF CYRILLIC SMALL LETTER PALOCHKA
+  ԛ: q    # U+051B CYRILLIC SMALL LETTER QA
+  ԝ: w    # U+051D CYRILLIC SMALL LETTER WE
+
+# 希腊字母 → 拉丁字母
+greek_to_latin:
+  ο: o    # U+03BF GREEK SMALL LETTER OMICRON
+  α: a    # U+03B1 GREEK SMALL LETTER ALPHA
+  ρ: p    # U+03C1 GREEK SMALL LETTER RHO
+  ν: v    # U+03BD GREEK SMALL LETTER NU
+  τ: t    # U+03C4 GREEK SMALL LETTER TAU
+  υ: u    # U+03C5 GREEK SMALL LETTER UPSILON
+  ι: i    # U+03B9 GREEK SMALL LETTER IOTA
+  κ: k    # U+03BA GREEK SMALL LETTER KAPPA
+  ε: e    # U+03B5 GREEK SMALL LETTER EPSILON
+
+# 其他文字系统与拉丁扩展中常用于仿冒的字符
+other_scripts:
+  օ: o    # U+0585 ARMENIAN SMALL LETTER OH
+  ս: u    # U+057D ARMENIAN SMALL LETTER SEH
+  հ: h    # U+0570 ARMENIAN SMALL LETTER HO
+  ո: n    # U+0578 ARMENIAN SMALL LETTER VO
+  ı: i    # U+0131 LATIN SMALL LETTER DOTLESS I
+  ɡ: g    # U+0261 LATIN SMALL LETTER SCRIPT G
+  ⅼ: l    # U+217C SMALL ROMAN NUMERAL FIFTY
+
+# 数字 ↔ 字母形近
+#
+#  用法限制：这一组不能当独立信号。
+#   域名里有数字完全正常（如 360.cn、163.com、51job.com）。
+#   它的用途是归一化后做品牌比对，即在仿冒品牌的近似域名那条检查里，
+#   把 paypa1.com 归一化成 paypal.com 再去比对品牌表。
+digit_lookalikes:
+  "0": o
+  "1": l
+  "3": e
+  "5": s

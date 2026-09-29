@@ -1,0 +1,67 @@
+# URL 短链服务清单
+#
+# 检查什么：邮件里的链接是不是短链，短链会把真实目标藏起来，
+#           点开之前根本不知道会跳到哪里
+#
+# 被哪条检查使用：链接使用短链服务   严重程度：中
+#
+# 分类的意义（决定判定强度）：
+#   generic    任何注册用户都能免费生成 → 钓鱼用它隐藏真实目标很常见（中危）
+#   china      国内常用短链，同上
+#   platform   绑定特定平台的官方短链 → 在该平台的正常通知邮件里极常见，
+#              命中只作提示，不宜直接给中危（否则每封微博/GitHub 通知都报）
+#   legacy     服务已停止或逐步失效，新邮件里出现反而更可疑
+#
+# 维护：只写域名，一律小写。不确定的不要加，宁缺毋滥，
+#       一条错的短链域名会让正常邮件被误判。
+
+# 通用短链：任何人都能创建，钓鱼常用来隐藏真实目标
+generic:
+  - bit.ly
+  - tinyurl.com
+  - is.gd
+  - v.gd
+  - ow.ly
+  - buff.ly
+  - rebrand.ly
+  - cutt.ly
+  - shorturl.at
+  - rb.gy
+  - tiny.cc
+  - t.ly
+  - clck.ru
+  - u.to
+  - qps.ru
+  - short.io
+  - bl.ink
+  - snip.ly
+
+# 国内常用短链
+china:
+  - t.cn          # 微博
+  - url.cn        # 腾讯
+  - dwz.cn        # 百度
+  - tb.cn         # 淘宝
+  - suo.im
+  - sourl.cn
+  - mrw.so
+
+# 平台官方短链：正常通知邮件里很常见，只作提示
+platform:
+  - t.co          # Twitter / X
+  - lnkd.in       # LinkedIn
+  - youtu.be      # YouTube
+  - fb.me         # Facebook
+  - wp.me         # WordPress
+  - redd.it       # Reddit
+  - amzn.to       # Amazon
+  - amzn.eu       # Amazon 欧洲
+  - spoti.fi      # Spotify
+  - nyti.ms       # 纽约时报
+  - g.co          # Google
+  - aka.ms        # Microsoft
+  - msft.it       # Microsoft
+
+# 已停止或逐步失效的服务：新邮件里出现这类域名，可疑度反而更高
+legacy:
+  - goo.gl        # Google 已停用该短链服务，旧链接陆续失效

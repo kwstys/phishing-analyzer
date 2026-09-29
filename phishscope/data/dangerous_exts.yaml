@@ -1,0 +1,80 @@
+# 危险扩展名清单
+#
+# 检查什么：邮件附件的扩展名是不是危险类型，能直接执行，或者能绕过邮件网关对内部文件的检查
+#
+# 被哪条检查使用：
+#   危险扩展名附件              严重程度：高
+#   RTF / LNK / ISO / IMG 附件  严重程度：高
+#
+# 用法：附件扩展名（小写、含前导点）命中任一条即触发对应检查
+#
+# 维护：
+#   - 新增一条只要加一行 `  - .xxx`
+#   - 扩展名一律小写、带前导点
+#   - 分类只影响报告里的措辞，不影响判定
+#
+# 注意：扩展名是信号不是罪证。正常业务邮件也会带 .iso 或 .chm，
+#       最终分数由评分引擎汇总，单条不构成结论。
+
+# 直接可执行
+executable:
+  - .exe
+  - .scr
+  - .com
+  - .pif
+  - .msi
+  - .msp
+  - .cpl
+
+# 脚本：双击即执行，是钓鱼最常用的投递形式
+script:
+  - .js
+  - .jse
+  - .vbs
+  - .vbe
+  - .wsf
+  - .wsh
+  - .hta
+  - .bat
+  - .cmd
+  - .ps1
+  - .psm1
+  - .psd1
+  - .sh
+
+# 快捷方式：本身无害，但可指向任意命令
+shortcut:
+  - .lnk
+  - .url
+  - .scf
+
+# 镜像 / 归档容器：常用来绕过邮件网关对内部文件的检查
+container:
+  - .iso
+  - .img
+  - .vhd
+  - .vhdx
+  - .vmdk
+  - .jar
+  - .ace
+
+# 带宏的 Office 文档
+macro_document:
+  - .docm
+  - .dotm
+  - .xlsm
+  - .xltm
+  - .xlam
+  - .pptm
+  - .potm
+  - .ppam
+
+# 其他常见免杀载体
+other:
+  - .rtf      # 可嵌入对象触发漏洞
+  - .chm      # 编译后的 HTML 帮助文件，可执行代码
+  - .reg      # 注册表脚本
+  - .svg      # SVG 可内嵌脚本
+  - .iqy      # Excel Web 查询，可被滥用执行命令
+  - .slk      # SYLK 格式，曾被用于绕过宏检测
+  - .xll      # Excel 加载项，本质是 DLL

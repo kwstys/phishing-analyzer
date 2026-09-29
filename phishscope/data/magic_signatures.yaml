@@ -1,0 +1,102 @@
+# 文件头签名（magic bytes）
+#
+# 检查什么：附件的真实文件类型（看开头的字节）和它声明的扩展名是否一致。
+#           例：Invoice.pdf.exe 名字看着像 PDF，开头却是 MZ（Windows 程序）
+#           这是最可靠的判断依据之一
+#
+# 被哪条检查使用：扩展名与真实类型不符   严重程度：高
+#
+# 字段：
+#   name    类型名，会出现在报告的原始证据里
+#   magic   十六进制字节串，空格分隔（大写，方便肉眼核对）
+#   offset  从文件第几字节开始匹配，默认 0
+#   exts    该类型的正常扩展名。附件声明的扩展名不在此列 → 触发上面那条检查
+#
+# 维护：新增一种类型 = 加一个条目。magic 必须与文件字节完全一致。
+#
+# 已知限制（代码里要额外处理）：
+#   1. OOXML（.docx/.xlsx/.pptx）的 magic 和普通 ZIP 完全一样（都是 PK\x03\x04）。
+#      要区分必须解开 ZIP，检查内部是否存在 [Content_Types].xml 以及
+#      word/ 、xl/ 、ppt/ 目录。这一步是逻辑，留在 Python 里，不写进本文件。
+#   2. ISO 的签名不在文件开头，必须按 offset 定位（见最后一条）。
+
+signatures:
+  - name: PE 可执行文件（Windows）
+    magic: "4D 5A"                    # MZ
+    offset: 0
+    exts: [.exe, .dll, .sys, .scr, .ocx, .cpl, .msi, .com]
+
+  - name: ELF 可执行文件（Linux）
+    magic: "7F 45 4C 46"              # \x7fELF
+    offset: 0
+    exts: [.elf, .so, .bin, .o]
+
+  - name: Mach-O 可执行文件（macOS）
+    magic: "CF FA ED FE"              # 64 位小端
+    offset: 0
+    exts: [.dylib, .bin]
+
+  - name: PDF 文档
+    magic: "25 50 44 46"              # %PDF
+    offset: 0
+    exts: [.pdf]
+
+  - name: ZIP 容器
+    magic: "50 4B 03 04"              # PK\x03\x04
+    offset: 0
+    exts: [.zip, .jar, .apk, .docx, .xlsx, .pptx, .odt, .epub]
+
+  - name: OLE 复合文档（旧版 Office / MSI）
+    magic: "D0 CF 11 E0 A1 B1 1A E1"
+    offset: 0
+    exts: [.doc, .xls, .ppt, .msi, .vsd]
+
+  - name: RTF 文档
+    magic: "7B 5C 72 74 66"           # rtf
+    offset: 0
+    exts: [.rtf, .doc]
+
+  - name: RAR 压缩包（v4）
+    magic: "52 61 72 21 1A 07 00"     # Rar
+    offset: 0
+    exts: [.rar]
+
+  - name: RAR 压缩包（v5）
+    magic: "52 61 72 21 1A 07 01 00"
+    offset: 0
+    exts: [.rar]
+
+  - name: 7-Zip 压缩包
+    magic: "37 7A BC AF 27 1C"
+    offset: 0
+    exts: [.7z]
+
+  - name: GZIP 压缩包
+    magic: "1F 8B"
+    offset: 0
+    exts: [.gz, .tgz]
+
+  - name: CAB 压缩包
+    magic: "4D 53 43 46"              # MSCF
+    offset: 0
+    exts: [.cab]
+
+  - name: CHM 帮助文件
+    magic: "49 54 53 46"              # ITSF
+    offset: 0
+    exts: [.chm]
+
+  - name: Windows 快捷方式
+    magic: "4C 00 00 00 01 14 02 00"
+    offset: 0
+    exts: [.lnk]
+
+  - name: Java class 文件
+    magic: "CA FE BA BE"
+    offset: 0
+    exts: [.class]
+
+  - name: ISO 光盘镜像
+    magic: "43 44 30 30 31"           # CD001
+    offset: 32769                     # 0x8001，不在文件开头
+    exts: [.iso]
