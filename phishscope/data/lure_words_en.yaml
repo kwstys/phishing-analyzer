@@ -1,0 +1,103 @@
+# 英文诱导话术词库
+#
+# 分 6 类，类别决定严重程度：
+#   credential 索要凭据（高）· threat 威胁后果（中）· finance 财务诱导（中）
+#   reward 承诺利益（中）· urgency 紧迫感（低）· action 催促操作（低）
+#
+# 两条维护规则：
+#   1. 收短语，不收单词。account、payment、important 正常邮件里到处都是。
+#      例外是 urgent —— 它在正常业务邮件里极少这么写。
+#   2. 拼写变体要各收一条。log in / login、sign in / signin 都会出现，
+#      只收一种会漏。
+#
+# 命中不等于钓鱼：正规服务也会发「请验证您的账户」——Google、银行的安全
+# 提醒就长这样。这里只给低到中的信号，最终由评分引擎汇总。
+#
+# 新增：一行一条，全小写，不带标点
+
+# 索要密码 / 验证码 / 身份证件
+credential:
+  - verify your password
+  - confirm your password
+  - update your password
+  - your password will expire
+  - password expiry notice
+  - verify your account
+  - confirm your account
+  - account verification required
+  - verify your identity
+  - confirm your identity
+  - login credentials
+  - security code
+  - one-time password
+  - update your payment information
+  - confirm your billing details
+
+# 威胁后果，用损失制造压力
+threat:
+  - account will be suspended
+  - account will be closed
+  - account will be terminated
+  - account has been locked
+  - account has been compromised
+  - unauthorized login attempt
+  - unauthorized access
+  - unusual sign-in activity
+  - suspicious activity on your account
+  - your account is at risk
+  - failure to comply
+  - legal action will be taken
+  - avoid account suspension
+
+# 财务诱导（商业邮件诈骗 BEC 最常用）
+finance:
+  - wire transfer
+  - payment overdue
+  - outstanding invoice
+  - unpaid invoice
+  - remittance advice
+  - update bank details
+  - bank account details have changed
+  - tax refund
+
+# 承诺利益
+reward:
+  - you have won
+  - congratulations you have won
+  - claim your prize
+  - you are a winner
+  - unclaimed funds
+  - exclusive offer
+  - limited time offer
+
+# 制造紧迫感
+urgency:
+  - urgent
+  - act now
+  - act immediately
+  - within 24 hours
+  - within 48 hours
+  - expires today
+  - expires soon
+  - final warning
+  - final notice
+  - last chance
+  - time sensitive
+  - immediate attention required
+
+# 催促点击 / 下载 / 扫码
+action:
+  - click here
+  - click the link below
+  - click the button below
+  - sign in here
+  - log in to verify
+  - login to your account
+  - download the attachment
+  - open the attached file
+  - enable macros
+  - enable content
+  - follow this link
+  - reactivate your account
+  - unlock your account
+  - restore access

@@ -1,0 +1,253 @@
+# 品牌清单
+#
+# 检查什么：品牌名是不是被冒用了
+#   例：显示名写「Microsoft 账户团队」，发件域却是 microsoft-support.top
+#       或者链接域名里含品牌词，但注册域不属于该品牌
+#
+# 被哪条检查使用：
+#   显示名仿冒品牌        严重程度：高
+#   仿冒品牌的近似域名    严重程度：高
+#
+# 选词规则（这份文件最容易造成误报，务必遵守）
+#
+#   aliases 里只收组合词，不收单个通用词。
+#
+#     收   ：Apple ID、微软账户、工行、顺丰快递
+#     不收 ：「苹果」「微软」「长城」「东方」单独出现
+#
+#   判断标准：这个词出现在正常邮件里的概率有多大？
+#
+# domains 的填写规则
+#
+#   只写「只有该品牌才能从它发信」的域名。
+#   免费邮箱域名不要写进来，哪怕那邮箱是品牌自己的：
+#
+#     qq.com 是腾讯的，但任何人都能注册 @qq.com，所以它证明不了腾讯身份
+#     outlook.com / live.com 之于微软、163.com / 126.com 之于网易同理
+#
+#   这类情况交给「使用免费邮箱却声称企业身份」那条检查处理。
+#
+# 字段：
+#   name     品牌标准名，会出现在报告里
+#   aliases  在显示名与域名里要匹配的词（组合词）
+#   domains  该品牌的合法域名。发件域不在此列 → 触发检查
+#
+# 维护：新增品牌 = 加一组。domains 要写全（含子业务域名），
+#       漏写会让品牌自己的正常邮件被误判。
+#          纯数字的别名必须加引号（如 "10086"），否则 YAML 会当成整数，
+#          代码里做不了字符串匹配。
+# 国际科技公司——被仿冒最多的一类
+international_tech:
+  - name: Microsoft
+    aliases: [Microsoft 账户, Microsoft 帐户, Microsoft 团队, 微软账户, 微软帐户, 微软客服, Office 365, Microsoft 365, OneDrive, Outlook 团队]
+    domains: [microsoft.com, microsoftonline.com, microsoft365.com, office.com, office365.com, sharepoint.com, onmicrosoft.com, azure.com]
+
+  - name: Apple
+    aliases: [Apple ID, iCloud, App Store, 苹果账户, 苹果帐户, 苹果客服, 苹果官方]
+    # icloud.com / me.com 虽然属于 Apple，但任何人都能注册 @icloud.com，
+    # 它证明不了 Apple 身份，所以不列在这里。
+    domains: [apple.com, apple.com.cn]
+
+  - name: Google
+    aliases: [Google 账户, Google 帐号, Google Play, Gmail 团队]
+    domains: [google.com, youtube.com, googleusercontent.com, withgoogle.com]
+
+  - name: Amazon
+    aliases: [Amazon 账户, 亚马逊账户, Amazon Prime, 亚马逊客服]
+    domains: [amazon.com, amazon.cn, amazonaws.com, a.co]
+
+  - name: PayPal
+    aliases: [PayPal 账户, PayPal 帐号, PayPal 客服]
+    domains: [paypal.com, paypal.me, paypal-community.com]
+
+  - name: Netflix
+    aliases: [Netflix 账户, Netflix 会员, Netflix 订阅]
+    domains: [netflix.com]
+
+  - name: Meta
+    aliases: [Facebook 账户, Facebook 帐号, Instagram 账户, WhatsApp 验证]
+    domains: [facebook.com, fb.com, meta.com, instagram.com, whatsapp.com]
+
+  - name: Adobe
+    aliases: [Adobe 账户, Adobe 订阅, Adobe 客服]
+    domains: [adobe.com]
+
+  - name: Dropbox
+    aliases: [Dropbox 账户, Dropbox 空间]
+    domains: [dropbox.com]
+
+  - name: LinkedIn
+    aliases: [LinkedIn 账户, 领英账户, 领英客服]
+    domains: [linkedin.com, lnkd.in]
+
+  - name: DHL
+    aliases: [DHL 快递, DHL 包裹, DHL 客服]
+    domains: [dhl.com, dhl.de]
+
+  - name: FedEx
+    aliases: [FedEx 包裹, FedEx 快递]
+    domains: [fedex.com]
+
+  - name: UPS
+    aliases: [UPS 包裹, UPS 快递]
+    domains: [ups.com]
+
+# 国内银行与支付——钓鱼的重灾区，涉及资金所以危害最大
+china_finance:
+  - name: 中国工商银行
+    aliases: [工商银行, 工行, ICBC]
+    domains: [icbc.com.cn, icbc.com, icbc.com.hk]
+
+  - name: 中国建设银行
+    aliases: [建设银行, 建行, 建行客服]
+    domains: [ccb.com, ccb.com.cn]
+
+  - name: 中国农业银行
+    aliases: [农业银行, 农行, 农行客服]
+    domains: [abchina.com, abchina.com.cn]
+
+  - name: 中国银行
+    aliases: [中国银行, 中行, Bank of China]
+    domains: [boc.cn, bankofchina.com]
+
+  - name: 交通银行
+    aliases: [交通银行, 交行]
+    domains: [bankcomm.com]
+
+  - name: 招商银行
+    aliases: [招商银行, 招行, 招行信用卡]
+    domains: [cmbchina.com]
+
+  - name: 中信银行
+    aliases: [中信银行, 中信信用卡]
+    domains: [citicbank.com]
+
+  - name: 浦发银行
+    aliases: [浦发银行, 浦发信用卡]
+    domains: [spdb.com.cn]
+
+  - name: 中国民生银行
+    aliases: [民生银行, 民生信用卡]
+    domains: [cmbc.com.cn]
+
+  - name: 支付宝
+    aliases: [支付宝, Alipay, 花呗, 借呗, 余额宝]
+    domains: [alipay.com, alipay.cn]
+
+  - name: 微信支付
+    aliases: [微信支付, 财付通, 微信团队, 微信安全中心]
+    domains: [tenpay.com, wechat.com, weixin.qq.com]
+
+  - name: 中国银联
+    aliases: [中国银联, 银联卡, 云闪付]
+    domains: [unionpay.com, unionpayintl.com, 95516.com]
+
+# 国内互联网平台
+china_internet:
+  - name: 腾讯
+    aliases: [腾讯客服, 腾讯安全, QQ 安全中心, QQ 邮箱团队, QQ 账号安全]
+    domains: [tencent.com, weixin.qq.com]
+
+  - name: 阿里巴巴
+    aliases: [阿里巴巴, 阿里云, 阿里客服]
+    # aliyun.com 是面向公众的免费邮箱，同样证明不了阿里身份
+    domains: [alibaba.com, alibaba-inc.com]
+
+  - name: 淘宝
+    aliases: [淘宝网, 淘宝账户, 淘宝客服, 天猫]
+    domains: [taobao.com, tmall.com, alibaba.com]
+
+  - name: 京东
+    aliases: [京东账户, 京东金融, 京东白条, 京东客服]
+    domains: [jd.com, jd.hk]
+
+  - name: 拼多多
+    aliases: [拼多多账户, 拼多多客服]
+    domains: [pinduoduo.com, yangkeduo.com]
+
+  - name: 百度
+    aliases: [百度账户, 百度网盘, 百度客服]
+    domains: [baidu.com]
+
+  - name: 美团
+    aliases: [美团账户, 美团客服, 大众点评]
+    domains: [meituan.com, dianping.com]
+
+  - name: 字节跳动
+    aliases: [抖音账户, 抖音客服, 今日头条, 字节跳动]
+    domains: [bytedance.com, douyin.com, toutiao.com]
+
+  - name: 网易
+    aliases: [网易账户, 网易邮箱, 网易云音乐, 网易客服]
+    domains: [netease.com]
+
+  - name: 新浪微博
+    aliases: [新浪微博, 微博账户, 微博客服]
+    domains: [weibo.com, sina.com.cn]
+
+  - name: 中国移动
+    aliases: [中国移动, 移动客服, "10086"]
+    domains: [chinamobile.com, 10086.cn]
+
+  - name: 中国联通
+    aliases: [中国联通, 联通客服, "10010"]
+    domains: [chinaunicom.com, 10010.com]
+
+  - name: 中国电信
+    aliases: [中国电信, 电信客服, "10000"]
+    # 189.cn 是面向公众的免费邮箱
+    domains: [chinatelecom.com.cn]
+
+# 物流快递："包裹异常"是最高频的钓鱼话术之一
+logistics:
+  - name: 顺丰速运
+    aliases: [顺丰速运, 顺丰快递, 顺丰客服]
+    domains: [sf-express.com]
+
+  - name: 中国邮政
+    aliases: [中国邮政, 邮政快递, EMS 快递]
+    domains: [chinapost.com.cn, ems.com.cn]
+
+  - name: 菜鸟
+    aliases: [菜鸟裹裹, 菜鸟驿站]
+    domains: [cainiao.com]
+
+  - name: 中通快递
+    aliases: [中通快递, 中通客服]
+    domains: [zto.com]
+
+  - name: 圆通速递
+    aliases: [圆通速递, 圆通客服]
+    domains: [yto.net.cn]
+
+  - name: 申通快递
+    aliases: [申通快递, 申通客服]
+    domains: [sto.cn]
+
+  - name: 韵达快递
+    aliases: [韵达快递, 韵达客服]
+    domains: [yundaex.com]
+
+# 政务与公共服务
+gov_public:
+  - name: 中国铁路 12306
+    aliases: ["12306", 铁路 12306, 中国铁路]
+    domains: [12306.cn]
+
+  - name: 国家税务总局
+    aliases: [国家税务总局, 个人所得税, 个税 App]
+    # 注意：各省电子税务局用的是各自的地方域名，无法在这里穷举，
+    #       所以这部分漏报要靠其他信号（可疑 TLD、链接域名）补。
+    domains: [chinatax.gov.cn]
+
+  - name: 国家医保服务平台
+    aliases: [国家医保服务平台, 医保电子凭证, 医保局]
+    domains: [nhsa.gov.cn]
+
+  - name: 学信网
+    aliases: [学信网, 中国高等教育学生信息网, 学历查询]
+    domains: [chsi.com.cn]
+
+  - name: 人力资源和社会保障部
+    aliases: [人力资源和社会保障, 人社部, 社保查询]
+    domains: [mohrss.gov.cn]
