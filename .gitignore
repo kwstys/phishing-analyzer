@@ -48,4 +48,4 @@ Desktop.ini
 .tmp/
 
 # 内部文档不随仓库公开，防止 git add -A 误提交
-/docs/PRD.md
+/docs/
