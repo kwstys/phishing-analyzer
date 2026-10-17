@@ -7,7 +7,8 @@
 
 [English](README.md)
 
-**早期阶段。仓库现在只有骨架，还不能真正分析邮件。**
+**开发中。** 邮件解析和 13 条头部伪造检测规则已经可用；
+认证校验、链接与附件分析、评分和报告还在做。
 
 ## 要解决的问题
 
@@ -35,18 +36,25 @@
 
 ## 用法
 
-还没实现。预期的接口：
+需要 Python 3.11+。
 
 ```
-phishscope analyze suspicious.eml
-phishscope analyze --stdin
+python -m phishscope 可疑邮件.eml
+python -m phishscope --text "From: ..."        # 粘贴的原始邮件
+type 可疑邮件.eml | python -m phishscope        # 从标准输入读
 ```
+
+运行后会打印邮件头、可疑点（每条带级别、证据和说明）、正文预览和附件列表。
 
 ## 进度
 
 - [x] 仓库和工程骨架
-- [ ] 邮件解析
-- [ ] 检测规则
+- [x] 邮件解析
+- [x] 头部伪造检测（13 条规则）
+- [ ] 认证校验（SPF / DKIM / DMARC）
+- [ ] 链接分析
+- [ ] 附件分析
+- [ ] 正文规则
 - [ ] 评分与报告
 
 ## 免责声明

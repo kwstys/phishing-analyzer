@@ -8,7 +8,8 @@ report with a risk score, the evidence behind each finding, and a list of IOCs.
 
 [中文说明](README.zh-CN.md)
 
-**Early stage. The repo is scaffolding right now — it can't analyze anything yet.**
+**Work in progress.** Email parsing and the 13 header-forgery rules work today. Authentication
+checks, link and attachment analysis, scoring and reports are still being built.
 
 ## The problem
 
@@ -37,18 +38,26 @@ brand impersonation, Chinese free-mail domains. Most existing tools are English-
 
 ## Usage
 
-Not implemented yet. The intended interface:
+Requires Python 3.11+.
 
 ```
-phishscope analyze suspicious.eml
-phishscope analyze --stdin
+python -m phishscope suspicious.eml
+python -m phishscope --text "From: ..."       # pasted raw email
+type suspicious.eml | python -m phishscope    # from stdin
 ```
+
+A run prints the parsed headers, the findings (each with severity, evidence and a short
+explanation), the body preview and the attachment list.
 
 ## Status
 
 - [x] Repo and tooling
-- [ ] Email parsing
-- [ ] Detection rules
+- [x] Email parsing
+- [x] Header forgery detection (13 rules)
+- [ ] Authentication checks (SPF / DKIM / DMARC)
+- [ ] Link analysis
+- [ ] Attachment analysis
+- [ ] Body heuristics
 - [ ] Scoring and reports
 
 ## Disclaimer
