@@ -14,8 +14,10 @@ import re
 import sys
 
 from . import __version__
-from .models import ParsedEmail
+from .analyzer import analyze
+from .models import Finding, ParsedEmail
 from .parser import ParseError, parse_file, parse_stdin, parse_text
+from .util import sanitize
 
 # 正文预览取多少个字符。这是验收标准写死的数字（"正文前 200 字"），改它要同步改文档。
 BODY_PREVIEW_CHARS = 200
@@ -86,11 +88,19 @@ def clip(text: str, limit: int = BODY_PREVIEW_CHARS) -> str:
     return text[:limit] + "…"
 
 
-def format_summary(mail: ParsedEmail, full_body: bool = False) -> str:
+def format_summary(
+    mail: ParsedEmail,
+    full_body: bool = False,
+    findings: list[Finding] | None = None,
+) -> str:
     """把 ParsedEmail 拼成一段可打印的报告。返回字符串，不直接 print。
 
     拆成"拼字符串"和"打印"两步，是为了以后想同时输出到文件/JSON 时不用重写。
+
+    findings 不传就自己算一遍——这样想单独测渲染时不用先跑分析。
     """
+    if findings is None:
+        findings = analyze(mail)
     lines: list[str] = [f"来源: {mail.source}", f"大小: {human_size(mail.raw_size)}", RULE]
 
     # ---- 发件人 ----
@@ -119,6 +129,20 @@ def format_summary(mail: ParsedEmail, full_body: bool = False) -> str:
         lines.append(f"日期: {mail.date}")
     if mail.message_id:
         lines.append(f"消息 ID: {mail.message_id}")
+
+    # ---- 可疑点 ----
+    # 放在正文之前：这是整个报告的结论，人扫一眼最该先看到它。
+    lines.append("")
+    if not findings:
+        lines.append("可疑点: 无")
+    else:
+        lines.append(f"可疑点（{len(findings)} 条）：")
+        for finding in findings:
+            lines.append("")
+            lines.append(f"  [{finding.severity.value}] {finding.rule}")
+            lines.append(f"       证据: {finding.evidence}")
+            if finding.detail:
+                lines.append(f"       说明: {finding.detail}")
 
     # ---- 正文 ----
     lines.append("")
@@ -157,7 +181,12 @@ def format_summary(mail: ParsedEmail, full_body: bool = False) -> str:
         for warning in mail.parse_warnings:
             lines.append(f"  ! {warning}")
 
-    return "\n".join(lines)
+    # 控制字符清洗放在**最后一步统一做**，而不是每个 f-string 里各写一次。
+    # 理由：要清洗的地方有十五六个，手写总会漏一个，而漏掉的那个正好可被利用。
+    #
+    # 前提：lines 里每一行都必须是不含换行的单行。将来如果要往里面塞多行内容
+    # （比如完整正文），必须改成逐值清洗，否则整段会被压成一行。
+    return "\n".join(sanitize(line) for line in lines)
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -166,7 +195,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser(
         prog="phishscope",
-        description="PhishScope —— 离线优先、结论可解释的钓鱼邮件分析器（第 1 周：仅解析预览）",
+        description="PhishScope —— 离线优先、结论可解释的钓鱼邮件分析器（第 2 周：头部欺诈检测）",
         epilog=(
             "示例：\n"
             "  python -m phishscope suspect.eml\n"
@@ -223,11 +252,18 @@ def main(argv: list[str] | None = None) -> int:
                 return 2
             mail = parse_stdin()
     except ParseError as exc:
-        print(f"错误：{exc}", file=sys.stderr)
+        # 异常信息里可能嵌着文件名，文件名也可能被构造成带控制字符
+        print(f"错误：{sanitize(str(exc))}", file=sys.stderr)
         return 2
     except OSError as exc:
         # 预期外的 IO 问题（磁盘、权限）。也不要吐堆栈
-        print(f"错误：读取失败（{exc}）", file=sys.stderr)
+        print(f"错误：读取失败（{sanitize(str(exc))}）", file=sys.stderr)
+        return 2
+    except RecursionError:
+        # 兜底。解析层已经守了两道（迭代遍历 + 捕获 stdlib 的递归），
+        # 但邮件结构千奇百怪，万一还有没预料到的递归路径，
+        # 也不能把一屏堆栈甩给用户——那是验收标准明令禁止的。
+        print("错误：这封邮件的嵌套结构过于复杂，已停止解析", file=sys.stderr)
         return 2
 
     print(format_summary(mail, full_body=args.full_body))

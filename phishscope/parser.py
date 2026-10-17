@@ -6,12 +6,20 @@ import email
 import sys
 from email import policy
 from email.header import decode_header, make_header
-from email.utils import parseaddr
 from pathlib import Path
 
 from .models import Attachment, ParsedEmail
+from .util import domain_of, split_address
 
+# ---- 输入预算 ----
+# 解析层是攻击者可控输入的唯一入口，所以三个硬上限都设在这里。
+# 单封邮件的原始字节上限
 MAX_FILE_SIZE = 50 * 1024 * 1024
+# MIME 嵌套深度上限。真实的转发链是 message/rfc822（本层不展开），
+# 正常邮件的嵌套很少超过 4 层（mixed > related > alternative > part）。
+MAX_MIME_DEPTH = 50
+# 单封邮件最多遍历多少个 part。防"一万个部件"这种廉价构造把分析拖死。
+MAX_PARTS = 500
 
 
 class ParseError(Exception):
@@ -43,21 +51,6 @@ def _decode_header_value(raw) -> str:
     return text
 
 
-def _split_address(value: str) -> tuple[str, str]:
-    """ "微软账户团队 <a@b.com>" → ("微软账户团队", "a@b.com")"""
-    display, addr = parseaddr(value)
-    if not addr and value.strip():
-        return value.strip(), ""
-    return display.strip(), addr.strip()
-
-
-def _domain_of(addr: str) -> str:
-    """ "a@b.com" → "b.com"；没有 @ 时返回空串（别抛异常）"""
-    if "@" not in addr:
-        return ""
-    return addr.rpartition("@")[2].strip().lower()  # 读取@后面部分即域名并转换成小写
-
-
 def _collect_headers(msg) -> dict[str, list[str]]:
     """把全部头部收成 名字 → 值列表。
 
@@ -75,16 +68,40 @@ def _walk_parts(msg):
 
     不能用 msg.walk()：它会把 message/rfc822（转发邮件）里的内层邮件
     也展开，内层的 From/Subject 会混进外层结果里。
-    这里自己写一个递归：遇到 message/rfc822 就当普通 part 交出去，不再往下走。
+    遇到 message/rfc822 就当普通 part 交出去，不再往下走。
+
+    为什么用显式栈而不是递归：
+    这封邮件来自攻击者。深度 500 的嵌套就能把递归栈打爆
+    （实测 RecursionError，程序带堆栈退出），而构造这样一封信几乎不要成本。
+    改成迭代后栈空间不再是问题，再用 MAX_MIME_DEPTH / MAX_PARTS 挡住病态输入。
+
+    展开顺序必须是文档顺序——正文只取第一个 text/plain，顺序变了结果就变了。
+    所以子节点要**逆序入栈**，出栈时才是正序。
     """
-    if not msg.is_multipart():
-        yield msg
-        return
-    for part in msg.iter_parts():
-        if part.get_content_type() == "message/rfc822":
-            yield part
-        else:
-            yield from _walk_parts(part)
+    stack = [(msg, 0)]
+    visited = 0
+
+    while stack:
+        node, depth = stack.pop()
+
+        visited += 1
+        if visited > MAX_PARTS:
+            raise ParseError(
+                f"这封邮件的 MIME 部件太多（超过 {MAX_PARTS} 个），已停止解析"
+            )
+
+        # message/rfc822 是多部件的，但本层把它当叶子，不展开
+        if not node.is_multipart() or node.get_content_type() == "message/rfc822":
+            yield node
+            continue
+
+        if depth >= MAX_MIME_DEPTH:
+            raise ParseError(
+                f"这封邮件的 MIME 嵌套太深（超过 {MAX_MIME_DEPTH} 层），已停止解析"
+            )
+
+        for child in reversed(list(node.iter_parts())):
+            stack.append((child, depth + 1))
 
 
 def _decode_part_text(part, warnings: list[str]) -> str:
@@ -177,8 +194,21 @@ def parse_bytes(data: bytes, source: str = "<bytes>") -> ParsedEmail:
     message_from_bytes 必须带 policy=policy.default，否则中文头部
     会退回成 =?utf-8?B?...?= 那串编码字
     """
+    # 尺寸上限设在 parse_bytes 而不是各个入口，是为了让"预算"只有一个权威位置。
+    # parse_file 里还有一次更早的检查，那是"别把大文件读进内存"的优化，不是不变量。
+    if len(data) > MAX_FILE_SIZE:
+        raise ParseError(
+            f"{source} 太大：{len(data) / 1024 / 1024:.1f} MB，"
+            f"上限 {MAX_FILE_SIZE // 1024 // 1024} MB"
+        )
+
     warnings: list[str] = []
-    msg = email.message_from_bytes(data, policy=policy.default)
+    try:
+        msg = email.message_from_bytes(data, policy=policy.default)
+    except RecursionError:
+        # stdlib 自己的 MIME 解析器也是递归的。深度 500 就能在这一步爆掉，
+        # 而且它发生在 _walk_parts 之前，所以必须单独兜住。
+        raise ParseError(f"{source} 的 MIME 嵌套太深，标准库解析器无法处理") from None
 
     if not _looks_like_email(msg, data):
         raise ParseError(
@@ -188,7 +218,7 @@ def parse_bytes(data: bytes, source: str = "<bytes>") -> ParsedEmail:
         )
 
     from_raw = _decode_header_value(msg.get("From"))
-    from_display, from_addr = _split_address(from_raw)
+    from_display, from_addr = split_address(from_raw)
     if not from_addr:
         warnings.append("缺少或无法解析 From 头")
 
@@ -214,7 +244,7 @@ def parse_bytes(data: bytes, source: str = "<bytes>") -> ParsedEmail:
         source=source,
         from_display=from_display,
         from_addr=from_addr,
-        from_domain=_domain_of(from_addr),
+        from_domain=domain_of(from_addr),
         reply_to=_decode_header_value(msg.get("Reply-to")),
         return_path=_decode_header_value(msg.get("Return-Path")),
         to=_decode_header_value(msg.get("To")),
@@ -274,7 +304,12 @@ def parse_stdin() -> ParsedEmail:
     stream = getattr(sys.stdin, "buffer", None)
     if stream is None:
         raise ParseError("当前标准输入不可用（没有二进制流）")
-    data = stream.read()
+    # 多读 1 字节用来判断"超没超"，避免先把整条管道读进内存再检查
+    data = stream.read(MAX_FILE_SIZE + 1)
     if not data:
         raise ParseError("标准输入是空的")
+    if len(data) > MAX_FILE_SIZE:
+        raise ParseError(
+            f"标准输入太大（超过 {MAX_FILE_SIZE // 1024 // 1024} MB），已停止读取"
+        )
     return parse_bytes(data, source="<stdin>")

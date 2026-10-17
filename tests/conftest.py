@@ -11,6 +11,9 @@ from email.message import EmailMessage
 
 import pytest
 
+from phishscope.models import ParsedEmail
+from phishscope.util import domain_of, split_address
+
 # ---------------------------------------------------------------- 正文素材
 PHISHING_HTML = (
     "<html><body>"
@@ -157,3 +160,42 @@ def no_from_eml() -> bytes:
 def not_an_email() -> bytes:
     """根本不是邮件的字节（假装是个 PDF）。"""
     return b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n" + b"x" * 500
+
+
+# ---------------------------------------------------------------- 分析层工厂
+def make_parsed(**overrides) -> ParsedEmail:
+    """构造一个最小可用的 ParsedEmail，给**分析器**单测用。
+
+    ParsedEmail 有 10 个必填字段。13 条规则 ×（正例 + 反例）都要手写一份
+    太啰嗦，所以给个工厂，测试里只写关心的那几个字段。
+
+    注意分工：
+      - 解析层测试走上面的 bytes fixture（那才是解析层真正的输入）
+      - 分析层测试走这个工厂（直接造对象，不经过解析）
+
+    自动推导：只给了 from_addr 没给 from_domain 时，按 from_addr 推。
+    否则很容易造出 "from_addr 是 evil.com、from_domain 还是 example.com"
+    这种自相矛盾的样本，测出来的结论没有意义。
+    """
+    values: dict[str, object] = {
+        "source": "<test>",
+        "from_display": "",
+        "from_addr": "sender@example.com",
+        "reply_to": "",
+        "return_path": "",
+        "to": "user@example.com",
+        "subject": "",
+        "date": "Mon, 1 Jan 2026 00:00:00 +0800",
+        "message_id": "<1@example.com>",
+    }
+    values.update(overrides)
+    if "from_domain" not in overrides:
+        _, addr = split_address(str(values["from_addr"]))
+        values["from_domain"] = domain_of(addr)
+    return ParsedEmail(**values)  # type: ignore[arg-type]
+
+
+@pytest.fixture
+def email_factory():
+    """把 make_parsed 暴露成 fixture。用法：email_factory(subject="...")"""
+    return make_parsed
